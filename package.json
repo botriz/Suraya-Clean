@@ -1,0 +1,11 @@
+{
+  "name": "suraya-clean",
+  "version": "1.0.0",
+  "description": "Suraya Blockchain - Clean Version",
+  "main": "core/blockchain.js",
+  "scripts": {
+    "start": "node -e \"const {SurayaChain}=require('./core/blockchain'); const c=new SurayaChain({difficulty:1}); c.registerNode('n1'); (async()=>{ const b=await c.mine('n1'); console.log('Block', b.index, b.hash.slice(0,16)); console.log(c.getStats()); })();\"",
+    "test": "node -e \"const {ProofOfIntelligence}=require('./core/blockchain'); const p=new ProofOfIntelligence(); p.updateMetrics('a',{validationAccuracy:95,responseTimeMs:40,predictionAccuracy:90,problemSolving:88,honesty:99}); console.log('Score', p.calculate('a').toFixed(1));\""
+  },
+  "license": "MIT"
+}
