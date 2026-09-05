@@ -1,2 +1,5 @@
 # Suraya-Clean
-Suraya-Clean/ ├── core/ │   └── blockchain.js ├── contracts/ │   └── Suraya.sol ├── world/ │   └── engine.js ├── frontend/ │   └── world.vue ├── docs/ │   └── WHITEPAPER.md ├── package.json ├── docker-compose.yml └── README.md
+
+بلاکچین نسل بعدی با Proof of Intelligence، توکن ARZA و جهان دیجیتال هوشمند.
+
+## ساختار
