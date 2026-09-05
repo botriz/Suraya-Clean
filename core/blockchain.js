@@ -1,9 +1,7 @@
-// Suraya Blockchain Core
 /**
- * SURAYA BLOCKCHAIN CORE
+ * SURAYA BLOCKCHAIN CORE - نسخه کامل و بهینه
  * Crypto + Merkle + Transaction + Block + ProofOfIntelligence + SurayaChain
  */
-
 'use strict';
 const crypto = require('crypto');
 const EventEmitter = require('events');
