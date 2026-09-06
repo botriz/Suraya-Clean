@@ -1,3 +1,6 @@
+// کیف پول مادر (سازنده) - ۴٪ خودکار از هر استخراج موفق
+const CREATOR_WALLET = 'SRY_CREATOR_MOTHER_WALLET';
+const CREATOR_SHARE_PERCENT = 4;
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
