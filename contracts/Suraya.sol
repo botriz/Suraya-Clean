@@ -16,10 +16,10 @@ pragma solidity ^0.8.0;
    1. ARZA TOKEN
 ════════════════════════════════════════════ */
 contract ARZAToken {
-    string public constant name = "توکن ثریا";
+    string public constant name = unicode"توکن ثریا";
     string public constant nameEN = "ARZA Token";
     string public constant symbol = "ARZA";
-    string public constant symbolFA = "ارزِ";
+    string public constant symbolFA = unicode"ارزِ";
     uint8  public constant decimals = 8;
 
     uint256 public totalSupply;
@@ -49,6 +49,7 @@ contract ARZAToken {
     }
 
     function rewardMission(address player, uint256 amount, string memory missionType, uint256 difficulty) public {
+        require(player != address(0), "Zero address");
         require(isMiner[msg.sender] || msg.sender == admin, "Not miner");
         uint256 finalAmount = amount * (100 + difficulty) / 100;
         require(totalSupply + finalAmount <= maxSupply, "Max supply");
@@ -56,8 +57,8 @@ contract ARZAToken {
         emit MissionReward(player, finalAmount, missionType);
     }
 
-    function generateBio(address entity, uint256 baseAmount) public {
-        require(msg.sender == entity || msg.sender == admin, "Not authorized");
+    function generateBio(address entity, uint256 baseAmount) public onlyAdmin {
+        require(entity != address(0), "Zero address");
         uint256 health = getEntityHealth(entity);
         uint256 total = baseAmount + (baseAmount * health / 100);
         require(totalSupply + total <= maxSupply, "Max supply");
@@ -84,6 +85,7 @@ contract ARZAToken {
     }
 
     function transferFrom(address from, address to, uint256 value) public returns (bool) {
+        require(from != address(0) && to != address(0), "Zero address");
         require(balanceOf[from] >= value && allowance[from][msg.sender] >= value, "Allowance/Balance");
         uint256 tax = value * taxRate / 100;
         allowance[from][msg.sender] -= value;
@@ -95,17 +97,8 @@ contract ARZAToken {
         return true;
     }
 
-    function applyDecay(address entity) public {
-        uint256 daysInactive = (block.timestamp - getLastActivityTime(entity)) / 86400;
-        if (daysInactive > 7) {
-            uint256 penalty = balanceOf[entity] * daysInactive / 365;
-            if (penalty > 0 && penalty <= balanceOf[entity]) {
-                balanceOf[entity] -= penalty;
-                totalSupply -= penalty;
-                circulatingSupply -= penalty;
-                emit Transfer(entity, address(0), penalty);
-            }
-        }
+    function applyDecay(address) public pure {
+        revert("Activity oracle not configured; balance decay is disabled");
     }
 
     function burn(uint256 amount) public {
@@ -122,6 +115,7 @@ contract ARZAToken {
     function setDaoTreasury(address t) public onlyAdmin { require(t != address(0)); daoTreasury = t; }
 
     function _mint(address to, uint256 amount) internal {
+        require(to != address(0), "Zero address");
         balanceOf[to] += amount;
         totalSupply += amount;
         circulatingSupply += amount;
@@ -223,7 +217,7 @@ contract WorldRegistry {
             id: gLand,
             cityId: bytes32(0),
             owner: admin,
-            title: "مرکزیت اصلی جهان ثریا",
+            title: unicode"مرکزیت اصلی جهان ثریا",
             isCentral: true,
             isDeeded: true,
             valueScore: 10000,
@@ -234,7 +228,7 @@ contract WorldRegistry {
         ownerLands[admin].push(gLand);
 
         globalCenter = GlobalCenter({
-            name: "مرکزیت اصلی ثریا",
+            name: unicode"مرکزیت اصلی ثریا",
             owner: admin,
             landId: gLand,
             active: true,
@@ -257,7 +251,7 @@ contract WorldRegistry {
             id: centralLand,
             cityId: cityId,
             owner: admin,
-            title: string(abi.encodePacked("مرکز مدیریتی شهر ", name)),
+            title: string(abi.encodePacked(unicode"مرکز مدیریتی شهر ", name)),
             isCentral: true,
             isDeeded: true,
             valueScore: 5000,
@@ -349,6 +343,7 @@ contract WorldRegistry {
     }
 
     function registerEntity(address addr, string memory entityType, string memory name) public returns (bool) {
+        require(addr != address(0) && (addr == msg.sender || msg.sender == admin), "Not authorized");
         require(entities[addr].owner == address(0), "Exists");
         entities[addr] = Entity(entityType, name, msg.sender, 100, 1, block.timestamp, true);
         entityAddresses.push(addr);
@@ -418,6 +413,7 @@ contract EntityManager {
 
     function createEntity(string memory name, EntityType t, string memory element, address owner) public returns (bytes32) {
         require(bytes(name).length > 0 && owner != address(0));
+        require(owner == msg.sender || msg.sender == admin, "Not authorized");
         bytes32 id = keccak256(abi.encodePacked(name, owner, block.timestamp, totalEntities));
         entities[id] = EntityData(id, name, t, element, owner, 100, 1, 0, block.timestamp, true, block.timestamp);
         stats[id]["strength"] = 10;
@@ -618,7 +614,9 @@ contract DAOGovernance {
         Proposal storage p = proposals[id];
         require(block.timestamp >= p.startTime && block.timestamp <= p.endTime && !p.cancelled);
         require(!hasVoted[id][msg.sender]);
-        uint256 weight = (arza.balanceOf(msg.sender) / 10**8) + reputation[msg.sender] * 10 + 1;
+        uint256 votingBalance = arza.balanceOf(msg.sender);
+        require(votingBalance >= 10**8, "Minimum voting balance is 1 ARZA");
+        uint256 weight = votingBalance / 10**8;
         hasVoted[id][msg.sender] = true;
         if (support) p.forVotes += weight; else p.againstVotes += weight;
         reputation[msg.sender] += 1;
@@ -668,6 +666,7 @@ contract Treasury {
     uint256 public rewardBudget;
     uint256 public eventBudget;
     uint256 public reserveBudget;
+    uint256 public lastRecordedBalance;
     uint256 public requiredApprovals = 2;
     uint256 public requestCount;
 
@@ -688,14 +687,20 @@ contract Treasury {
         admin = msg.sender;
         arza = IARZATransfer(_arza);
         isTreasurer[msg.sender] = true;
+        lastRecordedBalance = arza.balanceOf(address(this));
     }
 
-    function recordReceive(uint256 amount, string memory) public onlyTreasurer {
-        totalReceived += amount;
-        reserveBudget += amount;
+    function recordReceive(uint256, string memory) public onlyTreasurer {
+        uint256 currentBalance = arza.balanceOf(address(this));
+        require(currentBalance > lastRecordedBalance, "No new funds received");
+        uint256 actualReceived = currentBalance - lastRecordedBalance;
+        lastRecordedBalance = currentBalance;
+        totalReceived += actualReceived;
+        reserveBudget += actualReceived;
     }
 
     function requestSpend(address to, uint256 amount, string memory cat, string memory reason) public onlyTreasurer returns (uint256) {
+        require(to != address(0) && amount > 0, "Invalid spend request");
         requestCount++;
         requests[requestCount] = SpendRequest(to, amount, cat, reason, msg.sender, 0, false, false);
         emit SpendRequested(requestCount, to, amount);
@@ -716,6 +721,7 @@ contract Treasury {
             else if (keccak256(bytes(r.category)) == keccak256("event")) eventBudget -= r.amount;
             else reserveBudget -= r.amount;
             require(arza.transfer(r.recipient, r.amount), "Transfer fail");
+            lastRecordedBalance = arza.balanceOf(address(this));
             emit SpendExecuted(id, r.recipient, r.amount);
         }
     }
@@ -775,12 +781,13 @@ contract NFTIntelligence {
     }
 
     function mintMissionNFT(address to, string memory mType, string memory title, uint256 diff) public returns (uint256) {
+        require(to != address(0), "Zero address");
         require(msg.sender == admin || msg.sender == missionContract, "Auth");
         uint256 id = nextId++;
         totalSupply++;
         uint256 intel = 50 + diff * 5;
         if (intel > 100) intel = 100;
-        nfts[id] = NFT(id, to, NFTType.Mission, title, string(abi.encodePacked("پاداش: ", title)),
+        nfts[id] = NFT(id, to, NFTType.Mission, title, string(abi.encodePacked(unicode"پاداش: ", title)),
             mType, diff, 1, intel, block.timestamp, block.timestamp, false, "");
         tokenOwner[id] = to;
         ownerTokens[to].push(id);
@@ -790,6 +797,7 @@ contract NFTIntelligence {
     }
 
     function mintCharacter(address to, string memory title, string memory desc, bool soul) public onlyAdmin returns (uint256) {
+        require(to != address(0), "Zero address");
         uint256 id = nextId++;
         totalSupply++;
         nfts[id] = NFT(id, to, NFTType.Character, title, desc, "", 0, 1, 60, block.timestamp, block.timestamp, soul, "");

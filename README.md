@@ -1,21 +1,26 @@
-# Suraya-Clean
+# Suraya-Clean — blockchain and digital-world prototype
 
-بلاکچین ثریا - نسخه تمیز
+This repository contains an experimental Solidity contract suite, an in-memory JavaScript chain simulator, and an in-memory digital-world engine. It is **not a production blockchain, audited token, custody service, or deployable mainnet package**.
 
-## ساختار
-- core/blockchain.js
-- contracts/Suraya.sol
-- world/engine.js
-- frontend/world.vue
-- docs/WHITEPAPER.md
-- package.json
-- docker-compose.yml
-## مالکیت و مجوز استفاده
+## Current security boundaries
 
-© 2026 Suraya Project — All Rights Reserved.
+The current hardening branch addresses several prototype risks:
 
-این مخزن و محتوای آن (متن، کد، مستندات، نام‌ها و ساختار) متعلق به مالک پروژه ثریا است.
+- ARZA self-service minting is admin-gated until a verified issuance oracle exists.
+- Token minting and transfers reject zero addresses.
+- Balance decay is explicitly disabled until a real, independently verifiable activity oracle exists.
+- Entity registration/creation is restricted to the entity owner or administrator.
+- DAO voting requires at least 1 ARZA of voting balance; reputation no longer increases voting weight.
+- Treasury receipts are reconciled against actual token balance deltas instead of trusting a caller-supplied amount.
+- Treasury spend requests and NFT mints reject zero recipients.
 
-- استفاده شخصی و مشاهده آزاد است.
-- کپی کامل، فروش، ارائه به نام خود، یا استفاده تجاری بدون مجوز کتبی مالک ممنوع است.
-- جزئیات در فایل `OWNERSHIP.md` آمده است.
+These changes are targeted mitigations, not a complete smart-contract audit. The DAO still needs snapshot voting, quorum rules, proposal cancellation, and a reviewed execution/timelock model. Mission rewards need verifiable completion evidence. The simulator has no transaction signatures, persistent state, or production consensus.
+
+## Checks
+
+```bash
+npm test
+npx --yes solc@0.8.24 --bin contracts/Suraya.sol -o /tmp/suraya-contracts
+```
+
+Do not deploy these contracts or use ARZA as a real asset until an independent Solidity audit, adversarial EVM tests, economic review, key-management design, and testnet validation have been completed.
