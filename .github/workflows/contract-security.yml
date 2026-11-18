@@ -18,4 +18,9 @@ jobs:
         with:
           node-version: 20
       - run: npm test
-      - run: npx --yes solc@0.8.24 --optimize --bin contracts/Suraya.sol -o /tmp/suraya-contracts
+      - name: Compile Solidity with optimizer and viaIR
+        shell: bash
+        run: |
+          jq -n --arg content "$(cat contracts/Suraya.sol)" '{language:"Solidity",sources:{"contracts/Suraya.sol":{content:$content}},settings:{optimizer:{enabled:true,runs:200},viaIR:true,outputSelection:{"*":{"*":["abi","evm.bytecode.object"]}}}}' > /tmp/solc-input.json
+          npx --yes solc@0.8.24 --standard-json < /tmp/solc-input.json > /tmp/solc-output.json
+          node -e "const fs=require('node:fs'); const raw=fs.readFileSync('/tmp/solc-output.json','utf8'); const start=raw.indexOf('{'); if(start<0) throw new Error(raw); const out=JSON.parse(raw.slice(start)); const errors=(out.errors||[]).filter(e=>e.severity==='error'); if(errors.length){console.error(errors.map(e=>e.formattedMessage).join('\n')); process.exit(1);} console.log('Solidity compile successful');"
