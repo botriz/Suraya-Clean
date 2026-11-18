@@ -16,10 +16,10 @@ pragma solidity ^0.8.0;
    1. ARZA TOKEN
 ════════════════════════════════════════════ */
 contract ARZAToken {
-    string public constant name = "توکن ثریا";
+    string public constant name = unicode"توکن ثریا";
     string public constant nameEN = "ARZA Token";
     string public constant symbol = "ARZA";
-    string public constant symbolFA = "ارزِ";
+    string public constant symbolFA = unicode"ارزِ";
     uint8  public constant decimals = 8;
 
     uint256 public totalSupply;
@@ -217,7 +217,7 @@ contract WorldRegistry {
             id: gLand,
             cityId: bytes32(0),
             owner: admin,
-            title: "مرکزیت اصلی جهان ثریا",
+            title: unicode"مرکزیت اصلی جهان ثریا",
             isCentral: true,
             isDeeded: true,
             valueScore: 10000,
@@ -228,7 +228,7 @@ contract WorldRegistry {
         ownerLands[admin].push(gLand);
 
         globalCenter = GlobalCenter({
-            name: "مرکزیت اصلی ثریا",
+            name: unicode"مرکزیت اصلی ثریا",
             owner: admin,
             landId: gLand,
             active: true,
@@ -251,7 +251,7 @@ contract WorldRegistry {
             id: centralLand,
             cityId: cityId,
             owner: admin,
-            title: string(abi.encodePacked("مرکز مدیریتی شهر ", name)),
+            title: string(abi.encodePacked(unicode"مرکز مدیریتی شهر ", name)),
             isCentral: true,
             isDeeded: true,
             valueScore: 5000,
@@ -787,7 +787,7 @@ contract NFTIntelligence {
         totalSupply++;
         uint256 intel = 50 + diff * 5;
         if (intel > 100) intel = 100;
-        nfts[id] = NFT(id, to, NFTType.Mission, title, string(abi.encodePacked("پاداش: ", title)),
+        nfts[id] = NFT(id, to, NFTType.Mission, title, string(abi.encodePacked(unicode"پاداش: ", title)),
             mType, diff, 1, intel, block.timestamp, block.timestamp, false, "");
         tokenOwner[id] = to;
         ownerTokens[to].push(id);
