@@ -18,4 +18,4 @@ jobs:
         with:
           node-version: 20
       - run: npm test
-      - run: npx --yes solc@0.8.24 --bin contracts/Suraya.sol -o /tmp/suraya-contracts
+      - run: npx --yes solc@0.8.24 --optimize --bin contracts/Suraya.sol -o /tmp/suraya-contracts
