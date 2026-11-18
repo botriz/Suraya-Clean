@@ -1,0 +1,21 @@
+name: Suraya contract security checks
+
+on:
+  push:
+    branches:
+      - main
+      - security/harden-token-and-entity-guards-2026-11
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm test
+      - run: npx --yes solc@0.8.24 --bin contracts/Suraya.sol -o /tmp/suraya-contracts
