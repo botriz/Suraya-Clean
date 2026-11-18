@@ -4,8 +4,8 @@ import fs from "node:fs";
 
 const source = fs.readFileSync(new URL("../contracts/Suraya.sol", import.meta.url), "utf8");
 
-function functionSource(signature) {
-  const start = source.indexOf(signature);
+function functionSource(signature, fromIndex = 0) {
+  const start = source.indexOf(signature, fromIndex);
   assert.notEqual(start, -1, `missing function: ${signature}`);
   const open = source.indexOf("{", start);
   let depth = 0;
@@ -52,6 +52,6 @@ test("treasury receipts are reconciled against actual token balance changes", ()
 
 test("treasury spends and NFT mints reject zero recipients", () => {
   assert.match(functionSource("function requestSpend(address to"), /to != address\(0\) && amount > 0/);
-  assert.match(functionSource("function mintMissionNFT(address to"), /to != address\(0\)/);
+  assert.match(functionSource("function mintMissionNFT(address to", source.indexOf("contract NFTIntelligence")), /to != address\(0\)/);
   assert.match(functionSource("function mintCharacter(address to"), /to != address\(0\)/);
 });
