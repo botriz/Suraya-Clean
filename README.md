@@ -16,6 +16,16 @@ The current hardening branch addresses several prototype risks:
 
 These changes are targeted mitigations, not a complete smart-contract audit. The DAO still needs snapshot voting, quorum rules, proposal cancellation, and a reviewed execution/timelock model. Mission rewards need verifiable completion evidence. The simulator has no transaction signatures, persistent state, or production consensus.
 
+## Docker test runner
+
+The Compose file is a one-shot local test runner, not a blockchain node or public service. It exposes no network ports and mounts the source tree read-only:
+
+```bash
+docker compose --profile test run --rm simulator-tests
+```
+
+Do not expose this prototype as an RPC endpoint or deploy its token contracts to a public chain.
+
 ## Checks
 
 ```bash
