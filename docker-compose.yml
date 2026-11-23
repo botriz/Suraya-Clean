@@ -1,10 +1,16 @@
-version: '3.8'
 services:
-  chain:
+  simulator-tests:
     image: node:20-alpine
-    working_dir: /app
+    working_dir: /workspace
+    profiles:
+      - test
     volumes:
-      - .:/app
-    command: node -e "const {SurayaChain}=require('./core/blockchain'); const c=new SurayaChain(); console.log('Suraya ready', c.getStats()); setInterval(()=>{}, 1e9)"
-    ports:
-      - "8545:8545"
+      - .:/workspace:ro
+    command: ["npm", "test"]
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
